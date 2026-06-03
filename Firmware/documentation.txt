@@ -1,0 +1,134 @@
+Circuit Documentation
+Summary
+This circuit is designed to monitor environmental conditions using an ESP32-S3 microcontroller. It integrates various sensors and output devices to measure distance, detect rain, and provide visual and auditory alerts. The circuit also includes an OLED display for real-time data visualization and a WiFi module for sending data to a remote server.
+Component List
+ESP32-S3
+Description: A powerful microcontroller with integrated WiFi and Bluetooth capabilities.
+Pins: 3V3, RST, 4, 5, 6, 7, 15, 16, 17, 18, 8, 3, 46, 9, 10, 11, 12, 13, 14, 5V, GND, 19, 20, 21, 47, 48, 45, 0, 35, 36, 37, 38, 39, 40, 41, 42, 2, 1, RX, TX
+HC-SR04 Ultrasonic Sensor
+Description: A sensor used to measure distance by using ultrasonic waves.
+Pins: VCC, TRIG, ECHO, GND
+LED Two Pin (Green)
+Description: A green LED used for visual indication.
+Pins: Cathode, Anode
+LED Two Pin (Yellow)
+Description: A yellow LED used for visual indication.
+Pins: Cathode, Anode
+LED Two Pin (Red)
+Description: A red LED used for visual indication.
+Pins: Cathode, Anode
+Rain Sensor
+Description: A sensor used to detect the presence of rain.
+Pins: POS, NEG
+Properties: Resistance: 10kΩ to 10MΩ
+OLED 128x64 I2C Monochrome Display VDD-GND
+Description: A monochrome display used for visual output.
+Pins: VDD, GND, SCK, SDA
+Piezo Speaker
+Description: A speaker used for auditory alerts.
+Pins: pin1, pin2
+Wiring Details
+ESP32-S3
+3V3: Connected to VDD of the OLED Display and VCC of the Ultrasonic Sensor.
+GND: Connected to GND of the OLED Display, Ultrasonic Sensor, Rain Sensor, and cathodes of all LEDs.
+Pin 4: Connected to NEG of the Rain Sensor.
+Pin 5: Connected to TRIG of the Ultrasonic Sensor.
+Pin 6: Connected to ECHO of the Ultrasonic Sensor.
+Pin 8: Connected to SDA of the OLED Display.
+Pin 9: Connected to SCK of the OLED Display.
+Pin 15: Connected to Anode of the Green LED.
+Pin 16: Connected to Anode of the Yellow LED.
+Pin 17: Connected to Anode of the Red LED.
+Pin 18: Connected to pin2 of the Piezo Speaker.
+HC-SR04 Ultrasonic Sensor
+VCC: Connected to 3V3 of the ESP32-S3.
+TRIG: Connected to Pin 5 of the ESP32-S3.
+ECHO: Connected to Pin 6 of the ESP32-S3.
+GND: Connected to GND of the ESP32-S3.
+LED Two Pin (Green)
+Cathode: Connected to GND of the ESP32-S3.
+Anode: Connected to Pin 15 of the ESP32-S3.
+LED Two Pin (Yellow)
+Cathode: Connected to GND of the ESP32-S3.
+Anode: Connected to Pin 16 of the ESP32-S3.
+LED Two Pin (Red)
+Cathode: Connected to GND of the ESP32-S3.
+Anode: Connected to Pin 17 of the ESP32-S3.
+Rain Sensor
+POS: Connected to GND of the ESP32-S3.
+NEG: Connected to Pin 4 of the ESP32-S3.
+OLED 128x64 I2C Monochrome Display VDD-GND
+VDD: Connected to 3V3 of the ESP32-S3.
+GND: Connected to GND of the ESP32-S3.
+SDA: Connected to Pin 8 of the ESP32-S3.
+SCK: Connected to Pin 9 of the ESP32-S3.
+Piezo Speaker
+pin1: Not connected.
+pin2: Connected to Pin 18 of the ESP32-S3.
+Documented Code
+Overview
+The code is written for the ESP32-S3 microcontroller and is responsible for reading sensor data, controlling LEDs and a piezo speaker, displaying information on an OLED screen, and sending data to a remote server via WiFi.
+Key Features
+WiFi Connectivity: Connects to a WiFi network and sends data to a specified server URL.
+Sensor Reading: Reads distance from the ultrasonic sensor and rain status from the rain sensor.
+Alert System: Uses LEDs and a piezo speaker to indicate different alert levels based on sensor readings.
+OLED Display: Displays real-time data including rain status, distance, water level, and alert status.
+Multitasking: Utilizes FreeRTOS to run tasks concurrently on different cores of the ESP32-S3.
+Code Snippets
+WiFi Setup
+
+
+WiFi.begin(ssid, password);
+while (WiFi.status() != WL_CONNECTED) {
+    delay(100);
+}
+
+
+
+Sensor Reading and Alert Logic
+
+
+if (millis() - lastSensorRead >= sensorInterval) {
+    lastSensorRead = millis();
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+    long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+    if (duration > 0) {
+        shared_distance = duration * 0.034 / 2;
+        shared_waterLevel = 150.0 - shared_distance;
+        if(shared_waterLevel < 0) shared_waterLevel = 0;
+    }
+    shared_isRaining = (digitalRead(RAIN_SWITCH) == LOW);
+    // Alert logic
+}
+
+
+
+OLED Display Update
+
+
+display.clearDisplay();
+display.setTextSize(1);
+display.setTextColor(WHITE);
+display.setCursor(0, 0);
+display.print("Mua: ");
+display.print(rainStatus);
+display.setCursor(0, 15);
+display.print("Khoang cach: ");
+display.print(shared_distance, 1);
+display.print(" cm");
+display.setCursor(0, 30);
+display.print("Muc nuoc: ");
+display.print(shared_waterLevel, 1);
+display.print(" cm");
+display.setTextSize(2);
+display.setCursor(0, 48);
+display.print(statusStr);
+display.display();
+
+
+
+This documentation provides a comprehensive overview of the circuit, its components, wiring, and the embedded code functionality.

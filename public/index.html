@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Cảnh Báo Ngập Lụt</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e0e5ec;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            width: 380px;
+            text-align: center;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+        .data-row span { color: #555; font-weight: 500; }
+        .data-row strong { color: #2c3e50; font-size: 20px; }
+
+        .status-box {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+            background-color: #95a5a6; /* Màu xám mặc định */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Trạm Quan Trắc Tự Động</h2>
+
+        <div class="data-row">
+            <span>Thời tiết:</span>
+            <strong id="rain">--</strong>
+        </div>
+        <div class="data-row">
+            <span>Khoảng cách bề mặt:</span>
+            <strong><span id="distance">--</span> cm</strong>
+        </div>
+        <div class="data-row">
+            <span>Mực nước hiện tại:</span>
+            <strong><span id="water">--</span> cm</strong>
+        </div>
+
+        <div id="status" class="status-box">
+            Đang chờ kết nối...
+        </div>
+    </div>
+
+    <script>
+        async function fetchSensorData() {
+            try {
+                const response = await fetch('/api/data');
+                const data = await response.json();
+
+                // Cập nhật thông số
+                document.getElementById('rain').innerText = data.rain_status;
+                document.getElementById('distance').innerText = data.distance;
+                document.getElementById('water').innerText = data.water_level;
+
+                // Cập nhật trạng thái và đổi màu
+                const statusBox = document.getElementById('status');
+                statusBox.innerText = data.status;
+
+                // Đổi màu theo logic của ESP32
+                if (data.status === "NGUY HIEM") {
+                    statusBox.style.backgroundColor = "#e74c3c"; // Đỏ
+                } else if (data.status === "BAO DONG") {
+                    statusBox.style.backgroundColor = "#e67e22"; // Cam
+                } else if (data.status === "CHU Y") {
+                    statusBox.style.backgroundColor = "#f1c40f"; // Vàng
+                } else if (data.status === "AN TOAN") {
+                    statusBox.style.backgroundColor = "#2ecc71"; // Xanh lá
+                } else {
+                    statusBox.style.backgroundColor = "#95a5a6"; // Xám chờ
+                }
+
+            } catch (error) {
+                console.error("Lỗi khi kết nối với server:", error);
+            }
+        }
+
+        // Tự động lấy dữ liệu mỗi 2 giây
+        setInterval(fetchSensorData, 2000);
+        fetchSensorData();
+    </script>
+</body>
+</html>
